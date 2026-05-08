@@ -33,7 +33,7 @@ class EtaRequest(BaseModel):
     hora_dia:          int   = Field(..., ge=0, le=23)
     dia_semana:        int   = Field(..., ge=0, le=6, description="0=Dom, 6=Sáb")
     distancia_metros:  float = Field(..., gt=0, description="Distância até a próxima parada em metros")
-    velocidade_media:  float = Field(..., default=0, ge=0, description="Velocidade média atual em km/h")
+    velocidade_media:  float = Field(default=0, ge=0, description="Velocidade média atual em km/h")
     posicao_na_rota:   float = Field(..., ge=0, le=1, description="Posição na rota (0.0 a 1.0)")
 
 class EtaResponse(BaseModel):
