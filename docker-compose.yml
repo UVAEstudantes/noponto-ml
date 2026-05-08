@@ -9,6 +9,7 @@ services:
       - "5200:5200"
     networks:
       - noponto_default
+      - noponto_ml_default
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:5200/health || exit 1"]
       interval: 30s
@@ -17,4 +18,6 @@ services:
 
 networks:
   noponto_default:
+    external: true
+  noponto_ml_default:
     external: true
