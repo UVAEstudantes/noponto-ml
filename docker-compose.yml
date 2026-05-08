@@ -1,0 +1,20 @@
+services:
+  ml:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: noponto_ml
+    restart: unless-stopped
+    ports:
+      - "5200:5200"
+    networks:
+      - noponto_default
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5200/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+networks:
+  noponto_default:
+    external: true
