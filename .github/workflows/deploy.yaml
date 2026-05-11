@@ -67,7 +67,7 @@ jobs:
           port: 22
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          source: compose.yaml
+          source: docker-compose.yml
           target: /opt/stacks/noponto-ml/
           overwrite: true
 
@@ -79,5 +79,6 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
+            sudo mv /opt/stacks/noponto-ml/docker-compose.yml /opt/stacks/noponto-ml/compose.yaml 2>/dev/null || true
             export GHCR_TOKEN="${{ secrets.GHCR_TOKEN }}"
             bash /home/guilherme/deploy.sh noponto-ml ml noponto_ml
