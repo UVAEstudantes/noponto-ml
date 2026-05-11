@@ -1,0 +1,68 @@
+name: 🤖 NoPonto ML — Build e Deploy
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    name: 🐳 Build e Push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ secrets.GHCR_USER }}
+          password: ${{ secrets.GHCR_TOKEN }}
+      - name: Gera tags de versão
+        id: meta
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+          BASE=ghcr.io/${{ secrets.GHCR_USER }}/noponto-ml
+          TAGS="${BASE}:latest"
+          TAGS="${TAGS},${BASE}:${TIMESTAMP}-${SHORT_SHA}"
+          TAGS="${TAGS},${BASE}:build-${{ github.run_number }}"
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "version=build-${{ github.run_number }}-${SHORT_SHA}" >> $GITHUB_OUTPUT
+      - name: Build e push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64
+      - name: Resumo
+        run: |
+          echo "## 🤖 NoPonto ML Deploy" >> $GITHUB_STEP_SUMMARY
+          echo "**Versão:** \`${{ steps.meta.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "**Build:** \`#${{ github.run_number }}\`" >> $GITHUB_STEP_SUMMARY
+  deploy:
+    name: 🚀 Deploy
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Conecta no Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_OAUTH_SECRET }}
+          tags: tag:ci
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SERVER_TAILSCALE_IP }}
+          port: 22
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            export GHCR_TOKEN="${{ secrets.GHCR_TOKEN }}"
+            bash /home/guilherme/deploy.sh noponto-ml ml noponto_ml

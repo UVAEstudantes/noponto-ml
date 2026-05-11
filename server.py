@@ -33,7 +33,7 @@ class EtaRequest(BaseModel):
     hora_dia:          int   = Field(..., ge=0, le=23)
     dia_semana:        int   = Field(..., ge=0, le=6, description="0=Dom, 6=Sáb")
     distancia_metros:  float = Field(..., gt=0, description="Distância até a próxima parada em metros")
-    velocidade_media:  float = Field(..., ge=0, description="Velocidade média atual em km/h")
+    velocidade_media:  float = Field(default=0, ge=0, description="Velocidade média atual em km/h")
     posicao_na_rota:   float = Field(..., ge=0, le=1, description="Posição na rota (0.0 a 1.0)")
 
 class EtaResponse(BaseModel):
@@ -98,12 +98,8 @@ def prever_eta(req: EtaRequest):
 
 @app.post("/eta/batch")
 def prever_eta_batch(requests: list[EtaRequest]):
-    """
-    Predição em lote — até 200 veículos por chamada.
-    Muito mais eficiente que chamar /eta individualmente para cada veículo.
-    """
-    if len(requests) > 200:
-        raise HTTPException(status_code=400, detail="Máximo 200 veículos por lote.")
+    if len(requests) > 500:   # aumenta limite para 500 com EnriquecerTodasLinhas
+        raise HTTPException(status_code=400, detail="Máximo 500 veículos por lote.")
 
     if not requests:
         return []
@@ -111,15 +107,21 @@ def prever_eta_batch(requests: list[EtaRequest]):
     linhas_cod = [linha_map.get(r.linha.upper(), 0) for r in requests]
 
     X = np.array([
-        [r.hora_dia, r.dia_semana, r.distancia_metros,
-         r.velocidade_media, r.posicao_na_rota, lc]
+        [
+            r.hora_dia,
+            r.dia_semana,
+            max(r.distancia_metros, 1),    # garante > 0
+            max(r.velocidade_media, 0),    # garante >= 0
+            min(max(r.posicao_na_rota, 0), 1),  # garante [0,1]
+            lc
+        ]
         for r, lc in zip(requests, linhas_cod)
     ])
 
     predicoes = modelo.predict(X)
 
     resultados = []
-    for i, (req, eta_s) in enumerate(zip(requests, predicoes)):
+    for req, eta_s in zip(requests, predicoes):
         eta_s = float(max(10.0, min(eta_s, 3600.0)))
 
         if req.distancia_metros < 300:
