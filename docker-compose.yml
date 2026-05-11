@@ -5,6 +5,9 @@ services:
     restart: unless-stopped
     ports:
       - "5200:5200"
+    volumes:
+      - /home/guilherme/noponto/ml/modelo_eta.joblib:/app/modelo_eta.joblib
+      - /home/guilherme/noponto/ml/linha_encoder.joblib:/app/linha_encoder.joblib
     networks:
       - noponto_default
       - noponto_ml_default
