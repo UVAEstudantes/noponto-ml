@@ -21,15 +21,17 @@ from sqlalchemy import create_engine
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, median_absolute_error
 from xgboost import XGBRegressor
+from dotenv import load_dotenv
+load_dotenv()
 
 # ── Configuração ──────────────────────────────────────────────────────────────
 
 # Edite com as suas variáveis de ambiente ou coloque direto aqui para testar
-DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
-DB_PORT = os.getenv("POSTGRES_PORT", "5434")
-DB_NAME = os.getenv("POSTGRES_DB",   "transporte_db")
-DB_USER = os.getenv("POSTGRES_USER", "transporte_user")
-DB_PASS = os.getenv("POSTGRES_PASSWORD", "transporte_pass")
+DB_HOST = os.getenv("POSTGRES_HOST")
+DB_PORT = os.getenv("POSTGRES_PORT")
+DB_NAME = os.getenv("POSTGRES_DB")
+DB_USER = os.getenv("POSTGRES_USER")
+DB_PASS = os.getenv("POSTGRES_PASSWORD")
 
 # Linhas com dados suficientes para treinar
 #LINHAS_TREINO = ["838", "232", "867", "864", "397"]
