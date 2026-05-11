@@ -1,8 +1,6 @@
 services:
   ml:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/guilhermedesales/noponto-ml:latest
     container_name: noponto_ml
     restart: unless-stopped
     ports:
