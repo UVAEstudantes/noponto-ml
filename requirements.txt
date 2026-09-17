@@ -6,3 +6,4 @@ sqlalchemy==2.0.41
 joblib==1.4.2
 fastapi==0.115.12
 uvicorn==0.34.2
+pyarrow==19.0.1

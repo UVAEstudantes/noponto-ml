@@ -1,2 +1,6 @@
 .env
 .joblib
+__pycache__/
+*.py[cod]
+dataset-output/
+posicao-output/
